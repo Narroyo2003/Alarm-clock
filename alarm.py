@@ -1,28 +1,39 @@
+from datetime import datetime, time
+from playsound import playsound
+import threading
 import time
-import subprocess
 
-#added comment for test commit
+"""
+TODO Add a GUI class
+TODO Add song to alarm
+"""
 
-# Function to set the alarm
-def set_alarm(alarm_time):
+def alarm_clock(alarm_time, sound_file):
     while True:
-        current_time = time.strftime("%H:%M:%S")
-        if current_time == alarm_time:
+        current_time = datetime.now().time()
+        if current_time >= alarm_time:
             print("Time to wake up!")
-            play_alarm_sound()
+            if sound_file:
+                playsound(sound_file)
             break
         time.sleep(1)
 
-# Function to play the alarm sound
-def play_alarm_sound():
+def set_alarm():
+    while True:
+        alarm_time_str = input("Enter alarm time (24 hour format (HH:MM)): ")
+        try:
+            alarm_time = datetime.strptime(alarm_time_str, "%H:%M").time()
+        except ValueError:
+            print("Invalid format. Valid format is (HH:MM)")
+            continue
+        break
+    sound_file = input("Enter the path of the sound file you would like to play. Ex. Home/Sounds/SoundFile.mp3 ")
+    if not sound_file:
+        print("Sound file not provided, there will be no sound for the alarm.")
+    threading.Thread(target=alarm_clock, args=(alarm_time, sound_file)).start()
+
+if __name__ == "__main__":
     try:
-        # Use AppleScript to play the system alert sound
-        subprocess.call(['osascript', '-e', 'display notification "Time to wake up!" with title "Alarm" sound name "default"'])
-    except Exception as e:
-        print("Error playing alarm sound:", str(e))
-
-# Get the user's input for the alarm time
-alarm_time = input("Enter the alarm time (HH:MM:SS): ")
-
-# Start the alarm
-set_alarm(alarm_time)
+        set_alarm()
+    except KeyboardInterrupt as e:
+        print("\nAlarm clock terminated")
