@@ -1,12 +1,18 @@
+"""
+TODO Add a GUI class
+This is the program using pygame to play the sound instead of the playsound module
+"""
+
 from datetime import datetime, time
-from playsound import playsound
+#from playsound import playsound
+import pygame
 import threading
 import time
 
-"""
-TODO Add a GUI class
-TODO Add song to alarm
-"""
+pygame.init()
+pygame.mixer.init() 
+
+stop_alarm = threading.Event()
 
 def alarm_clock(alarm_time, sound_file):
     while True:
@@ -14,7 +20,11 @@ def alarm_clock(alarm_time, sound_file):
         if current_time >= alarm_time:
             print("Time to wake up!")
             if sound_file:
-                playsound(sound_file)
+                alarm_sound = pygame.mixer.Sound(sound_file)
+                alarm_sound.play()
+                delay_ms = int(alarm_sound.get_length() * 1000)
+                pygame.time.delay(delay_ms)
+                pygame.quit()
             break
         time.sleep(1)
 
@@ -30,10 +40,20 @@ def set_alarm():
     sound_file = input("Enter the path of the sound file you would like to play. Ex. Home/Sounds/SoundFile.mp3 ")
     if not sound_file:
         print("Sound file not provided, there will be no sound for the alarm.")
-    threading.Thread(target=alarm_clock, args=(alarm_time, sound_file)).start()
+    alarm_thread = threading.Thread(target=alarm_clock, args=(alarm_time, sound_file))
+    alarm_thread.start()
+    global stop_alarm
+    try:
+        while not stop_alarm.is_set():
+            pass
+    except KeyboardInterrupt:
+        print("\nAlarm clock terminated")
+        stop_alarm.set()
+
 
 if __name__ == "__main__":
     try:
         set_alarm()
     except KeyboardInterrupt as e:
         print("\nAlarm clock terminated")
+        stop_alarm.set()
